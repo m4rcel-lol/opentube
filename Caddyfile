@@ -1,0 +1,16 @@
+{$OPENTUBE_DOMAIN:localhost} {
+	encode gzip zstd
+
+	@api path /api/* /health
+	reverse_proxy @api backend:3001
+
+	handle_path /media/* {
+		root * /srv/storage
+		file_server
+	}
+
+	@embed path /embed/*
+	reverse_proxy @embed frontend:80
+
+	reverse_proxy frontend:80
+}

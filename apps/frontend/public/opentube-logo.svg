@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="430" height="104" viewBox="0 0 430 104" role="img" aria-labelledby="title desc">
+  <title id="title">OpenTube</title>
+  <desc id="desc">Original glossy one-word OpenTube wordmark with black text and a black video panel.</desc>
+  <defs>
+    <linearGradient id="panelDark" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#555555"/>
+      <stop offset="0.45" stop-color="#202020"/>
+      <stop offset="1" stop-color="#050505"/>
+    </linearGradient>
+    <linearGradient id="panelShine" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.42"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="openInk" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#4a4a4a"/>
+      <stop offset="0.5" stop-color="#202020"/>
+      <stop offset="1" stop-color="#0c0c0c"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="1.6" stdDeviation="1.35" flood-color="#000000" flood-opacity="0.34"/>
+    </filter>
+  </defs>
+  <rect width="430" height="104" fill="none"/>
+  <g filter="url(#shadow)">
+    <text x="5" y="75" font-family="Arial Black, Impact, Arial, Helvetica, sans-serif" font-size="70" font-weight="900" fill="url(#openInk)" letter-spacing="-2.5">Open</text>
+    <path d="M232 26H398C410 26 417 34 417 45V61C417 75 410 84 398 84H232C219 84 212 75 212 61V45C212 34 219 26 232 26Z" fill="url(#panelDark)" stroke="#000000" stroke-width="2.2"/>
+    <path d="M234 30H396C406 30 412 36 414 45C371 36 267 36 216 47C218 36 224 30 234 30Z" fill="url(#panelShine)"/>
+    <text x="235" y="75" font-family="Arial Black, Impact, Arial, Helvetica, sans-serif" font-size="58" font-weight="900" fill="#ffffff" letter-spacing="-1.8">Tube</text>
+  </g>
+</svg>

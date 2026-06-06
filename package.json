@@ -1,0 +1,21 @@
+{
+  "name": "opentube",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run db:generate && npm --workspace packages/shared run build && npm --workspace apps/backend run build && npm --workspace apps/worker run build && npm --workspace apps/frontend run build",
+    "typecheck": "npm run db:generate && npm --workspace packages/shared run build && npm --workspace apps/backend run typecheck && npm --workspace apps/worker run typecheck && npm --workspace apps/frontend run typecheck && npm --workspace packages/shared run typecheck",
+    "lint": "npm run lint -ws --if-present",
+    "test": "npm --workspace packages/shared run test",
+    "create-admin": "npm --workspace apps/backend run create-admin",
+    "db:migrate": "npm --workspace apps/backend run db:migrate",
+    "db:deploy": "npm --workspace apps/backend run db:deploy",
+    "db:generate": "npm --workspace apps/backend run prisma:generate",
+    "seed:demo": "npm --workspace apps/backend run seed:demo"
+  }
+}

@@ -1,0 +1,241 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+enum VideoStatus {
+  UPLOADING
+  PROCESSING
+  READY
+  FAILED
+  REMOVED
+}
+
+enum VideoVisibility {
+  PUBLIC
+  UNLISTED
+  PRIVATE
+}
+
+enum ReportTargetType {
+  VIDEO
+  COMMENT
+  USER
+}
+
+enum ReportStatus {
+  OPEN
+  REVIEWED
+  DISMISSED
+}
+
+model User {
+  id                   String              @id @default(cuid())
+  username             String              @unique
+  email                String              @unique
+  passwordHash         String
+  avatarPath           String?
+  bannerPath           String?
+  channelDescription   String              @default("")
+  channelCustomization Json                @default("{\"backgroundColor\":\"#ffffff\",\"textColor\":\"#333333\",\"linkColor\":\"#0033cc\"}")
+  role                 UserRole            @default(USER)
+  isBanned             Boolean             @default(false)
+  isVerified           Boolean             @default(false)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  lastLoginAt          DateTime?
+  videos               Video[]
+  comments             Comment[]
+  channelCommentsMade  ChannelComment[]    @relation("ChannelCommentAuthor")
+  channelComments      ChannelComment[]    @relation("ChannelCommentOwner")
+  ratings              Rating[]
+  favorites            Favorite[]
+  subscriptions        Subscription[]      @relation("Subscriber")
+  subscribers          Subscription[]      @relation("ChannelOwner")
+  reports              Report[]            @relation("Reporter")
+  sessions             Session[]
+  resetTokens          PasswordResetToken[]
+}
+
+model Video {
+  id                String          @id @default(cuid())
+  ownerId           String
+  title             String
+  description       String          @default("")
+  tags              String[]        @default([])
+  category          String
+  originalFilePath  String?
+  processedFilePath String?
+  thumbnailPath     String?
+  duration          Int?
+  status            VideoStatus     @default(UPLOADING)
+  visibility        VideoVisibility @default(PUBLIC)
+  allowEmbedding    Boolean         @default(true)
+  views             Int             @default(0)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  owner             User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  comments          Comment[]
+  ratings           Rating[]
+  favorites         Favorite[]
+  viewEvents        ViewEvent[]
+  variants          VideoVariant[]
+
+  @@index([ownerId])
+  @@index([status, visibility, createdAt])
+  @@index([views])
+  @@index([category])
+}
+
+model VideoVariant {
+  id        String   @id @default(cuid())
+  videoId   String
+  label     String
+  filePath  String
+  width     Int?
+  height    Int?
+  createdAt DateTime @default(now())
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@unique([videoId, label])
+}
+
+model Comment {
+  id        String    @id @default(cuid())
+  videoId   String
+  userId    String
+  parentId  String?
+  body      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  isRemoved Boolean   @default(false)
+  video     Video     @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("CommentReplies")
+
+  @@index([videoId, createdAt])
+  @@index([parentId])
+}
+
+model ChannelComment {
+  id             String   @id @default(cuid())
+  channelOwnerId String
+  userId         String
+  body           String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  isRemoved      Boolean  @default(false)
+  channelOwner   User     @relation("ChannelCommentOwner", fields: [channelOwnerId], references: [id], onDelete: Cascade)
+  user           User     @relation("ChannelCommentAuthor", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([channelOwnerId, createdAt])
+}
+
+model Rating {
+  id          String   @id @default(cuid())
+  videoId     String
+  userId      String
+  ratingValue Int
+  createdAt   DateTime @default(now())
+  video       Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([videoId, userId])
+  @@index([videoId])
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  videoId   String
+  userId    String
+  createdAt DateTime @default(now())
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([videoId, userId])
+  @@index([userId, createdAt])
+}
+
+model Subscription {
+  id             String   @id @default(cuid())
+  subscriberId   String
+  channelOwnerId String
+  createdAt      DateTime @default(now())
+  subscriber      User     @relation("Subscriber", fields: [subscriberId], references: [id], onDelete: Cascade)
+  channelOwner    User     @relation("ChannelOwner", fields: [channelOwnerId], references: [id], onDelete: Cascade)
+
+  @@unique([subscriberId, channelOwnerId])
+  @@index([channelOwnerId])
+}
+
+model Report {
+  id         String           @id @default(cuid())
+  reporterId String
+  targetType ReportTargetType
+  targetId   String
+  reason     String
+  status     ReportStatus     @default(OPEN)
+  createdAt  DateTime         @default(now())
+  reviewedAt DateTime?
+  reporter   User             @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@index([targetType, targetId])
+}
+
+model ViewEvent {
+  id            String   @id @default(cuid())
+  videoId       String
+  viewerUserId  String?
+  ipHash        String
+  userAgentHash String
+  createdAt     DateTime @default(now())
+  video         Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@index([videoId, createdAt])
+  @@index([ipHash, userAgentHash, createdAt])
+}
+
+model SiteSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+model Session {
+  id            String   @id @default(cuid())
+  tokenHash     String   @unique
+  userId        String
+  ipHash        String?
+  userAgentHash String?
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
