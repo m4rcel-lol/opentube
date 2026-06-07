@@ -76,6 +76,8 @@ services:
       context: .
       dockerfile: apps/frontend/Dockerfile
     restart: unless-stopped
+    ports:
+      - "5173:80"
     depends_on:
       backend:
         condition: service_healthy
